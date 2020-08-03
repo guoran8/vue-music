@@ -1,5 +1,12 @@
 <template>
-  <Scroll :class="$style.listView" :data="data" ref="scroll">
+  <Scroll
+    :class="$style.listView"
+    :data="data"
+    :isListenScroll="true"
+    :probeType="3"
+    @listenScroll="onListenScroll"
+    ref="scroll"
+  >
     <div>
       <div v-for="item in data" :key="item.alpha" ref="group">
         <p :class="$style.header">{{ item.alpha.toUpperCase() }}</p>
@@ -33,14 +40,14 @@ const ALPHA_HEIGHT = 20;
 
 export default {
   name: "index",
+  components: {
+      Scroll
+  },
   props: {
     data: {
       type: Array,
       default: () => ([])
     }
-  },
-  components: {
-    Scroll
   },
   created() {
     this.touch = {};
@@ -63,11 +70,13 @@ export default {
         const index = this.touch.index + delta;
         const element = this.$refs.group[index];
 
-        console.log(typeof this.touch.index);
         this.scrollToAlpha(element);
       },
       scrollToAlpha(element) {
         this.$refs.scroll.scrollToElement(element, 0);
+      },
+      onListenScroll(pos) {
+        console.log(pos);
       }
   },
   computed: {

@@ -21,6 +21,10 @@ export default {
           type: Boolean,
           default: false
         },
+        isListenScroll: {
+          type: Boolean,
+          default: false
+        },
         data: {
             type: Array,
             default: null
@@ -45,6 +49,10 @@ export default {
               click: this.click,
               bounce: this.bounce
           })
+
+          if (this.isListenScroll) {
+              this.onListenScroll();
+          }
         },
         enable() {
             this.scroll && this.scroll.enable();
@@ -57,6 +65,11 @@ export default {
         },
         scrollTo() {
             this.scroll && this.scroll.scrollTo.apply(this.scroll, arguments);
+        },
+        onListenScroll() {
+          this.scroll.on('scroll', pos => {
+              this.$emit('listenScroll', pos);
+          })
         },
         scrollToElement() {
             this.scroll && this.scroll.scrollToElement.apply(this.scroll, arguments);
