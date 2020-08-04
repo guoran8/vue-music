@@ -24,10 +24,12 @@
       @touchmove.stop.prevent="onAlphabetTouchMove"
     >
       <li
-        :class="$style['nav-item']"
         v-for="(letter, index) in alphabet"
         :key="index"
-        :data-index="index">{{ letter }}</li>
+        :class="[$style['nav-item'], index === currentPage ? $style['nav-item--active'] : '' ]"
+        :data-index="index"
+        ref="navItem"
+      >{{ letter }}</li>
     </ul>
   </Scroll>
 </template>
@@ -49,6 +51,10 @@ export default {
       default: () => ([])
     }
   },
+  data: () => ({
+      currentPage: 0, // 当前字母
+      pageHeight: 0 // 当前滚动页总高度
+  }),
   created() {
     this.touch = {};
   },
@@ -76,7 +82,26 @@ export default {
         this.$refs.scroll.scrollToElement(element, 0);
       },
       onListenScroll(pos) {
-        console.log(pos);
+        if(this.pageHeight === 0) { // 滚动初始化高度
+            this.pageHeight = this.$refs.group[this.currentPage].clientHeight;
+        }
+
+        if(Math.abs(pos.y) > this.pageHeight) { // 上滑
+            const nextPage = this.currentPage + 1;
+            this.pageHeight += this.$refs.group[nextPage].clientHeight;
+            this.currentPage += 1;
+        }
+
+        const currentPage = this.currentPage;
+        const prevPage = currentPage > 0 ? (currentPage - 1) : 0;
+        const prevPageHeight = this.pageHeight - this.$refs.group[prevPage].clientHeight;
+
+        if(Math.abs(pos.y) < prevPageHeight && prevPage < currentPage) {
+            console.log(Math.abs(pos.y));
+            console.log(prevPageHeight);
+            this.pageHeight -= this.$refs.group[currentPage].clientHeight;
+            this.currentPage -= 1;
+        }
       }
   },
   computed: {
@@ -131,5 +156,9 @@ export default {
   font-size: 14px;
   font-weight: bold;
   color: #6e6e6e;
+}
+
+.nav-item--active {
+  color: #eeeeee;
 }
 </style>
