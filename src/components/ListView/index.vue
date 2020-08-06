@@ -31,6 +31,8 @@
         ref="navItem"
       >{{ letter }}</li>
     </ul>
+    <!-- bscroll 只处理第一个子元素 -->
+    <p :class="$style['fixed-header']" ref="fixedTitle">{{ currentAlpha }}</p>
   </Scroll>
 </template>
 
@@ -53,7 +55,6 @@ export default {
   },
   data: () => ({
       currentPage: 0, // 当前字母
-      pageHeight: 0 // 当前滚动页总高度
   }),
   created() {
     this.touch = {};
@@ -82,29 +83,59 @@ export default {
         this.$refs.scroll.scrollToElement(element, 0);
       },
       onListenScroll(pos) {
-        if(this.pageHeight === 0) { // 滚动初始化高度
-            this.pageHeight = this.$refs.group[this.currentPage].clientHeight;
-        }
+        const positionY = Math.abs(pos.y);
+        const group = this.$refs.group;
+        let pageHeight = 0;
 
-        if(Math.abs(pos.y) > this.pageHeight) { // 上滑
-            const nextPage = this.currentPage + 1;
-            this.pageHeight += this.$refs.group[nextPage].clientHeight;
-            this.currentPage += 1;
-        }
+        for(let i = 0; i < group.length; i++) {
+            pageHeight += group[i]['clientHeight'];
+            if (positionY > pageHeight) {
+                this.currentPage = i + 1;
 
-        const currentPage = this.currentPage;
-        const prevPage = currentPage > 0 ? (currentPage - 1) : 0;
-        const prevPageHeight = this.pageHeight - this.$refs.group[prevPage].clientHeight;
+                if(pageHeight - positionY < 40) {
+                    const diff = pageHeight - positionY;
+                    console.log(diff)
+                    this.$refs.fixedTitle.style.transform = `translate3d(0,${diff}px,0)`
+                }
+            }
 
-        if(Math.abs(pos.y) < prevPageHeight && prevPage < currentPage) {
-            console.log(Math.abs(pos.y));
-            console.log(prevPageHeight);
-            this.pageHeight -= this.$refs.group[currentPage].clientHeight;
-            this.currentPage -= 1;
+            if(positionY < pageHeight) {
+                console.log(positionY);
+                console.log(pageHeight);
+                this.currentPage = i;
+                break;
+            }
         }
+        // if(this.pageHeight === 0) { // 滚动初始化高度
+        //     this.pageHeight = this.$refs.group[this.currentPage].clientHeight;
+        // }
+        //
+        // if(Math.abs(pos.y) > this.pageHeight) { // 上滑
+        //     const nextPage = this.currentPage + 1;
+        //     this.pageHeight += this.$refs.group[nextPage].clientHeight;
+        //     this.currentPage += 1;
+        // }
+        //
+        // const currentPage = this.currentPage;
+        // const prevPage = currentPage > 0 ? (currentPage - 1) : 0;
+        // const prevPageHeight = this.pageHeight - this.$refs.group[prevPage].clientHeight;
+        //
+        // if(Math.abs(pos.y) < prevPageHeight && prevPage < currentPage) {
+        //     console.log(Math.abs(pos.y));
+        //     console.log(prevPageHeight);
+        //     this.pageHeight -= this.$refs.group[currentPage].clientHeight;
+        //     this.currentPage -= 1;
+        // }
       }
   },
   computed: {
+    currentAlpha() {
+      if (this.data.length > 0) {
+        return this.data[this.currentPage]['alpha'].toUpperCase();
+      } else {
+        return 'HOT';
+      }
+    },
     alphabet() {
         return this.data.map(item => (item.alpha.toUpperCase()));
     }
@@ -118,8 +149,24 @@ export default {
   position: relative;
   background: $bgColor;
 }
+.group {
+  position: relative;
+}
 .header {
   margin: 10px 0;
+  height: 40px;
+  line-height: 40px;
+  text-indent: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #6e6e6e;
+  background: #333333;
+}
+.fixed-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
   height: 40px;
   line-height: 40px;
   text-indent: 10px;
